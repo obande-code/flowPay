@@ -87,6 +87,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Serves collected static files when DEBUG is off. Must sit right after SecurityMiddleware.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -203,6 +205,11 @@ STATICFILES_DIRS = [BASE_DIR.parent / 'static']
 # `manage.py collectstatic` writes here. Not served by Django in production:
 # your host must serve this directory, or add WhiteNoise in front of the app.
 STATIC_ROOT = BASE_DIR.parent / 'staticfiles'
+# Hashed, gzip-compressed copies for WhiteNoise.
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+}
 
 
 # Email
