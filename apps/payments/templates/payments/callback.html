@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Payment | flowPay{% endblock %}
+
+{% block content %}
+<div class="result-wrap">
+  <section class="card card--result">
+    {% if payment %}
+      <div class="result-icon result-icon--{{ payment.status }}" aria-hidden="true">
+        {% if payment.status == "successful" %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        {% elif payment.status == "failed" %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        {% else %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        {% endif %}
+      </div>
+
+      <p class="pill pill--{{ payment.status }}">{{ payment.get_status_display }}</p>
+
+      {% if payment.status == "successful" %}
+        <h1>Payment received</h1>
+        <p class="lede">Thank you — this payment has been confirmed and recorded.</p>
+      {% elif payment.status == "failed" %}
+        <h1>Payment not completed</h1>
+        <p class="lede">Paystack did not complete this payment, so nothing was charged.</p>
+      {% else %}
+        <h1>Payment still processing</h1>
+        <p class="lede">Paystack has not confirmed this payment yet. It will settle automatically
+          once confirmation arrives, or after the reconciliation sweep runs.</p>
+      {% endif %}
+
+      <dl class="details">
+        <div>
+          <dt>Reference</dt>
+          <dd class="mono">{{ payment.reference }}</dd>
+        </div>
+        <div>
+          <dt>Amount</dt>
+          <dd>₦{{ payment.amount|floatformat:2 }} {{ payment.currency }}</dd>
+        </div>
+        <div>
+          <dt>Business</dt>
+          <dd>{{ payment.business.name }}</dd>
+        </div>
+        <div>
+          <dt>Started</dt>
+          <dd>{{ payment.created_at|date:"j M Y, H:i" }}</dd>
+        </div>
+      </dl>
+
+      {% if error %}
+        <p class="alert alert--info">{{ error }}</p>
+      {% endif %}
+
+      <a class="btn btn--primary btn--block" href="{% url 'accounts:users' %}">Back to dashboard</a>
+    {% else %}
+      <div class="result-icon result-icon--failed" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </div>
+      <h1>Payment not found</h1>
+      <p class="lede">{{ error }}</p>
+      <div style="margin-top: 1.5rem;">
+        <a class="btn btn--primary btn--block" href="{% url 'accounts:users' %}">Back to dashboard</a>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

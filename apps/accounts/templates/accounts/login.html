@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Log in | flowPay{% endblock %}
+
+{% block content %}
+<div class="stack auth">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Welcome back</p>
+      <h1>Log in</h1>
+    </div>
+  </div>
+
+  <section class="card auth-card">
+    <nav class="auth-tabs" aria-label="Account">
+      <a href="{% url 'accounts:login' %}" aria-current="page">Login</a>
+      <a href="{% url 'accounts:signup' %}">Sign Up</a>
+    </nav>
+    <form method="post" class="form">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <p class="alert" role="alert">{{ form.non_field_errors|join:" " }}</p>
+      {% endif %}
+      {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {% if field.field.widget.input_type == 'password' %}
+          <div class="pw-wrap">
+            {{ field }}
+            <button type="button" class="pw-toggle" data-pw-toggle="{{ field.id_for_label }}" aria-pressed="false">Show</button>
+          </div>
+          {% else %}
+          {{ field }}
+          {% endif %}
+        </div>
+      {% endfor %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn btn--primary" type="submit">Log in</button>
+    </form>
+    <p class="card__hint">New here? <a href="{% url 'accounts:signup' %}">Create an account</a></p>
+  </section>
+</div>
+<script>
+  document.querySelectorAll('[data-pw-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var input = document.getElementById(btn.dataset.pwToggle);
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? 'Hide' : 'Show';
+      btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+    });
+  });
+</script>
+{% endblock %}

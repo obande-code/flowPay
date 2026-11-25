@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ payment.reference }} | flowPay{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Payment</p>
+      <h1 class="mono">{{ payment.reference }}</h1>
+      <p class="lede">
+        <span class="pill pill--{{ payment.status }}">{{ payment.get_status_display }}</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card__head">
+        <h2 id="details-heading">Details</h2>
+      </div>
+      <dl class="details">
+        <div>
+          <dt>Amount</dt>
+          <dd>₦{{ payment.amount|floatformat:2 }} {{ payment.currency }}</dd>
+        </div>
+        <div>
+          <dt>Business</dt>
+          <dd>{{ payment.business.name }}</dd>
+        </div>
+        <div>
+          <dt>Provider</dt>
+          <dd>{{ payment.provider.name }}</dd>
+        </div>
+        <div>
+          <dt>Started</dt>
+          <dd>{{ payment.created_at|date:"j M Y, H:i" }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <div class="card__head">
+        <h2 id="history-heading">History</h2>
+        <span class="pill">{{ events|length }} {{ events|length|pluralize:"entry,entries" }}</span>
+      </div>
+      <div class="table-wrap">
+        <table aria-labelledby="history-heading">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Event</th>
+              <th scope="col">Source</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+              <tr>
+                <td class="cell-date">{{ event.created_at|date:"j M Y, H:i:s" }}</td>
+                <td>{{ event.message }}</td>
+                <td>{{ event.get_source_display }}</td>
+                <td><span class="pill pill--{{ event.status }}">{{ event.get_status_display }}</span></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="empty">No history recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <p><a href="{% url 'accounts:users' %}">&larr; Back to dashboard</a></p>
+</div>
+{% endblock %}

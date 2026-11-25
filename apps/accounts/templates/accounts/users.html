@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Users | flowPay{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Overview</p>
+      <h1>Users</h1>
+      <p class="lede">Everyone with access to this flowPay workspace.</p>
+    </div>
+  </div>
+
+  <section class="stats" aria-label="Workspace summary">
+    <div class="stat">
+      <p class="stat__label">Users</p>
+      <p class="stat__value">{{ users|length }}</p>
+    </div>
+    <div class="stat">
+      <p class="stat__label">Your businesses</p>
+      <p class="stat__value">{{ businesses|length }}</p>
+    </div>
+    <div class="stat">
+      <p class="stat__label">Currency</p>
+      <p class="stat__value">NGN</p>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card__head">
+        <h2 id="members-heading">Workspace members</h2>
+        <span class="pill">{{ users|length }} total</span>
+      </div>
+      <div class="table-wrap">
+        <table aria-labelledby="members-heading">
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Joined</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+              <tr>
+                <td>
+                  <div class="cell-user">
+                    <span class="avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
+                    <span>
+                      <span class="cell-user__name">{{ user.username }}</span><br>
+                      <span class="cell-user__email">{{ user.email|default:"No email on file" }}</span>
+                    </span>
+                  </div>
+                </td>
+                <td class="cell-date">{{ user.date_joined|date:"j M Y, H:i" }}</td>
+                <td>
+                  {% if user.is_active %}
+                    <span class="pill pill--successful">Active</span>
+                  {% else %}
+                    <span class="pill pill--inactive">Inactive</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="empty">No users yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="card card--pay">
+      <h2>Make a payment</h2>
+      {% if businesses %}
+        <p class="card__hint">You'll finish securely with your chosen provider and come back here with the result.</p>
+        <form id="pay-form" class="form">
+          {% csrf_token %}
+          <div class="field">
+            <label for="business">Business</label>
+            <select id="business" name="business_id" required>
+              {% for business in businesses %}
+                <option value="{{ business.pk }}">{{ business.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="provider">Provider</label>
+            <select id="provider" name="provider" required>
+              <option value="paystack">Paystack</option>
+              <option value="flutterwave">Flutterwave</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="amount">Amount</label>
+            <div class="input-affix">
+              <span class="input-affix__addon" aria-hidden="true">₦</span>
+              <input id="amount" name="amount" type="number" min="1" step="0.01"
+                     inputmode="decimal" placeholder="0.00" required>
+            </div>
+          </div>
+          <button class="btn btn--primary btn--block" type="submit">Pay</button>
+          <p id="pay-error" class="alert" role="alert" hidden></p>
+        </form>
+      {% else %}
+        <p class="card__hint">You need a business before you can make a payment.</p>
+        <a class="btn btn--ghost btn--block" href="/admin/businesses/business/add/">Add a business</a>
+      {% endif %}
+      {% if businesses %}
+        <ul class="business-links">
+          {% for business in businesses %}
+            <li><a href="{% url 'businesses:settings' business.pk %}">Settings for {{ business.name }} &rarr;</a></li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </aside>
+  </div>
+
+  <section class="card">
+    <div class="card__head">
+      <h2 id="payments-heading">Recent payments</h2>
+      <span class="pill">Last {{ payments|length }}</span>
+    </div>
+    <div class="table-wrap">
+      <table aria-labelledby="payments-heading">
+        <thead>
+          <tr>
+            <th scope="col">Reference</th>
+            <th scope="col">Business</th>
+            <th scope="col" class="num">Amount</th>
+            <th scope="col">Status</th>
+            <th scope="col">Started</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payment in payments %}
+            <tr>
+              <td><a class="mono" href="{% url 'payments:detail' payment.reference %}">{{ payment.reference }}</a></td>
+              <td>{{ payment.business.name }}</td>
+              <td class="num">₦{{ payment.amount|floatformat:2 }}</td>
+              <td><span class="pill pill--{{ payment.status }}">{{ payment.get_status_display }}</span></td>
+              <td class="cell-date">{{ payment.created_at|date:"j M Y, H:i" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="empty">No payments yet — start one above.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+  const form = document.getElementById('pay-form');
+  if (form) {
+    const errorBox = document.getElementById('pay-error');
+    const button = form.querySelector('button[type=submit]');
+    const originalLabel = button.textContent;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorBox.hidden = true;
+      button.disabled = true;
+      button.textContent = 'Starting checkout…';
+
+      try {
+        const response = await fetch('{% url "payments:initiate" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+          },
+          body: JSON.stringify({
+            business_id: form.elements.business_id.value,
+            amount: form.elements.amount.value,
+            provider: form.elements.provider.value,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.authorization_url) {
+          window.location.href = data.authorization_url;
+          return;
+        }
+        errorBox.textContent = data.error || 'Could not start the payment. Please try again.';
+      } catch (requestError) {
+        errorBox.textContent = 'Network problem. Check your connection and try again.';
+      }
+
+      errorBox.hidden = false;
+      button.disabled = false;
+      button.textContent = originalLabel;
+    });
+  }
+</script>
+{% endblock %}

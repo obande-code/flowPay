@@ -1,0 +1,23 @@
+# Virtualenv
+venv/
+.venv/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Django
+staticfiles/
+media/
+*.sqlite3
+*.log
+
+# macOS
+.DS_Store

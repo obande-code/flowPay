@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Sign up | flowPay{% endblock %}
+
+{% block content %}
+<div class="stack auth">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Get started</p>
+      <h1>Create your account</h1>
+      <p class="lede">Sign up, then register your business to start accepting payments.</p>
+    </div>
+  </div>
+
+  <section class="card auth-card">
+    <nav class="auth-tabs" aria-label="Account">
+      <a href="{% url 'accounts:login' %}">Login</a>
+      <a href="{% url 'accounts:signup' %}" aria-current="page">Sign Up</a>
+    </nav>
+    <form method="post" class="form">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {% if field.field.widget.input_type == 'password' %}
+          <div class="pw-wrap">
+            {{ field }}
+            <button type="button" class="pw-toggle" data-pw-toggle="{{ field.id_for_label }}" aria-pressed="false">Show</button>
+          </div>
+          {% else %}
+          {{ field }}
+          {% endif %}
+          {% for error in field.errors %}
+            <p class="alert" role="alert">{{ error }}</p>
+          {% endfor %}
+          {% if field.help_text %}<p class="card__hint">{{ field.help_text|safe }}</p>{% endif %}
+        </div>
+      {% endfor %}
+      <button class="btn btn--primary" type="submit">Sign up</button>
+    </form>
+    <p class="card__hint">Already have an account? <a href="{% url 'accounts:login' %}">Log in</a></p>
+  </section>
+</div>
+<script>
+  document.querySelectorAll('[data-pw-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var input = document.getElementById(btn.dataset.pwToggle);
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? 'Hide' : 'Show';
+      btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+    });
+  });
+</script>
+{% endblock %}

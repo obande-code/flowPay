@@ -1,0 +1,91 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}flowPay{% endblock %}</title>
+  <script>
+    // Resolve the theme before first paint so the page never flashes the wrong colours.
+    (function () {
+      var choice = null;
+      try { choice = localStorage.getItem('flowpay-theme'); } catch (e) {}
+      var dark = choice ? choice === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    })();
+  </script>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="{% url 'accounts:users' %}">
+        <span class="brand__mark" aria-hidden="true">₦</span>
+        <span class="brand__name">flowPay</span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a class="nav__link" href="{% url 'accounts:users' %}"
+           {% if request.resolver_match.app_name == 'accounts' %}aria-current="page"{% endif %}>Users</a>
+        <a class="nav__link" href="{% url 'transactions:list' %}"
+           {% if request.resolver_match.app_name == 'transactions' %}aria-current="page"{% endif %}>Transactions</a>
+        <a class="nav__link" href="/admin/">Admin</a>
+      </nav>
+
+      {% if user.is_authenticated %}
+        <div class="account">
+          <button class="btn btn--ghost btn--icon" id="theme-toggle" type="button" aria-pressed="false">
+            <svg class="icon icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+            </svg>
+            <svg class="icon icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2"/>
+              <path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+            </svg>
+            <span class="visually-hidden">Switch theme</span>
+          </button>
+          <span class="avatar avatar--sm" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
+          <span class="account__name">{{ user.username }}</span>
+          <form method="post" action="{% url 'admin:logout' %}">
+            {% csrf_token %}
+            <button class="btn btn--ghost btn--sm" type="submit">Sign out</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <p>flowPay · payments processed by Paystack</p>
+  </footer>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var toggle = document.getElementById('theme-toggle');
+      if (!toggle) return;
+
+      function sync() {
+        var dark = root.dataset.theme === 'dark';
+        toggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+        toggle.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+      }
+      sync();
+
+      toggle.addEventListener('click', function () {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('flowpay-theme', root.dataset.theme); } catch (e) {}
+        sync();
+      });
+    })();
+  </script>
+</body>
+</html>

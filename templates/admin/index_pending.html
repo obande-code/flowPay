@@ -1,0 +1,42 @@
+{% extends "admin/index.html" %}
+{% load business_admin %}
+
+{% block content %}
+{% pending_businesses as pending %}
+<div class="module" id="pending-businesses">
+  <h2>Pending business approvals</h2>
+  {% if pending %}
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Business</th>
+          <th scope="col">Owner</th>
+          <th scope="col">Registered</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for business in pending %}
+          <tr>
+            <th scope="row">
+              <a href="{% url 'admin:businesses_business_change' business.pk %}">{{ business.name }}</a>
+            </th>
+            <td>{{ business.owner.get_username }}</td>
+            <td>{{ business.created_at|date:"j M Y, H:i" }}</td>
+            <td>{{ business.get_status_display }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="paginator">
+      <a href="{% url 'admin:businesses_business_changelist' %}?status=pending">
+        Review all pending businesses
+      </a>
+      — select them there and use “Approve selected businesses”.
+    </p>
+  {% else %}
+    <p>No businesses are waiting for approval.</p>
+  {% endif %}
+</div>
+{{ block.super }}
+{% endblock %}

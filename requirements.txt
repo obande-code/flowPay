@@ -1,0 +1,14 @@
+# flowPay dependencies, pinned to the versions verified in the local venv.
+# Python 3.14 / Django 6.1.
+Django==6.1.3
+djangorestframework==3.18.3
+drf-spectacular==0.30.0
+django-cors-headers==4.9.0
+psycopg2-binary==2.9.13
+gunicorn==27.0.1
+
+# Transitive deps are resolved automatically; pins below keep builds reproducible.
+asgiref==3.13.0
+sqlparse==0.6.1
+uritemplate==4.2.0
+PyYAML==6.0.4
